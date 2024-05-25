@@ -161,19 +161,29 @@
                                         <th>Categoria</th>
                                         <th class="text-right">Stock mínimo</th>
                                         <th class="text-right">Stock actual</th>
-                                        <th class="text-right">Precio de venta</th>
                                         <th class="text-right">Costo</th>
-                                        <th>Ganancia
+                                          <th class="text-right">Costo total - Almacén
                                             <el-tooltip
                                                 class="item"
-                                                content="Precio de venta - Costo"
+                                                content="Costo * stock"
                                                 effect="dark"
                                                 placement="top-start"
                                             >
                                                 <i class="fa fa-info-circle"></i>
                                             </el-tooltip>
                                         </th>
-                                        <th>Ganancia Total
+                                        <th class="text-right">Precio de venta</th>
+                                        <th>Costo de venta
+                                            <el-tooltip
+                                                class="item"
+                                                content="Precio de venta * stock"
+                                                effect="dark"
+                                                placement="top-start"
+                                            >
+                                                <i class="fa fa-info-circle"></i>
+                                            </el-tooltip>
+                                        </th>
+                                        <th>Beneficio
                                             <el-tooltip
                                                 class="item"
                                                 content="Precio de venta - Costo * Cantidad"
@@ -199,10 +209,12 @@
                                         <td>{{ row.item_category_name }}</td>
                                         <td class="text-right">{{ row.stock_min }}</td>
                                         <td class="text-right">{{ row.stock }}</td>
-                                        <td class="text-right">{{ row.sale_unit_price }}</td>
                                         <td class="text-right">{{ row.purchase_unit_price }}</td>
-                                        <td class="text-right">{{ row.profit }}</td>
-                                        <td class="text-right">{{ Math.abs(row.profit * row.stock).toFixed(2) }}</td>
+                                        <td class="text-right">{{ Math.abs(row.purchase_unit_price * row.stock).toFixed(2) }}</td>
+                                        <td class="text-right">{{ row.sale_unit_price }}</td>
+                                        <td class="text-right">{{ Math.abs(row.sale_unit_price * row.stock).toFixed(2) }}</td>
+                                        <td class="text-right">{{ Math.abs(Math.abs(row.sale_unit_price * row.stock).toFixed(2) - Math.abs(row.purchase_unit_price * row.stock).toFixed(2)).toFixed(2) }}</td>
+                                       <!---<td class="text-right">{{ Math.abs(row.profit * row.stock).toFixed(3) }}</td>-->
                                         <td>{{ row.brand_name }}</td>
                                         <td class="text-center">{{ row.date_of_due }}</td>
                                         <td>{{ row.warehouse_name }}</td>
@@ -211,13 +223,15 @@
                                     </tbody>
                                     <tfoot>
                                     <tr>
-                                        <td class="celda"
-                                            colspan="5"></td>
-                                        <td class="celda">S/ {{ totals.sale_unit_price }}</td>
-                                        <td class="celda">S/ {{ totals.purchase_unit_price }}</td>
-
-                                        <td class="celda">S/ {{ total_profit }}</td>
-                                        <td class="celda">S/ {{ total_all_profit }}</td>
+                                        <td class="celda" colspan="6"></td>
+                                        <!--
+                                        <td class="celda">RD$ {{ totals.sale_unit_price }}</td>
+                                        <td class="celda">RD$ {{ totals.purchase_unit_price }}</td>
+                                        <td class="celda">RD$ {{ totals.purchase_unit_price }}</td>
+                                        -->
+                                        <td class="celda text-right">RD$ {{ totals.cost_warehouse }}</td>
+                                        <td class="celda" colspan="2"></td>
+                                        <td class="celda text-right">RD$ {{ total_profit }}</td>
                                     </tr>
                                     </tfoot>
                                 </table>
@@ -263,6 +277,8 @@ export default {
             // titleDialog: null,
             total_profit: 0,
             total_all_profit: 0,
+            total_cost_warehouse: 0,
+            costo:0,
             loading: false,
             loadingPdf: false,
             loadingXlsx: false,
@@ -277,6 +293,7 @@ export default {
             totals: {
                 purchase_unit_price: 0,
                 sale_unit_price: 0,
+                cost_warehouse:0
             },
             pickerOptionsDates: {
                 disabledDate: (time) => {
@@ -329,6 +346,7 @@ export default {
             this.totals = {
                 purchase_unit_price: 0,
                 sale_unit_price: 0,
+                cost_warehouse:0
             }
 
         },
@@ -347,30 +365,37 @@ export default {
             this.total_all_profit = 0;
             this.total_purchase_unit_price = 0;
             this.total_sale_unit_price = 0;
-
+          
+          
             if (this.records.length > 0) {
 
                 let el = this;
                 this.records.forEach(function (a, b) {
 
-                    el.total_profit += Math.abs(a.profit);
+                    el.total_profit += parseFloat(a.stock * a.sale_unit_price).toFixed(2) - parseFloat(a.stock * a.purchase_unit_price).toFixed(2);
                     el.total_all_profit += Math.abs(a.profit * a.stock);
 
                     el.totals.purchase_unit_price += parseFloat(a.purchase_unit_price)
                     el.totals.sale_unit_price += parseFloat(a.sale_unit_price)
 
+                    el.totals.cost_warehouse += parseFloat(a.stock * a.purchase_unit_price);
+
                 })
 
             }
 
-            this.total_profit = this.total_profit.toFixed(2)
-            this.total_all_profit = this.total_all_profit.toFixed(2)
+            this.total_profit = this.total_profit.toFixed(3)
+            this.total_all_profit = this.total_all_profit.toFixed(3)
 
-            this.totals.purchase_unit_price = this.totals.purchase_unit_price.toFixed(6)
-            this.totals.sale_unit_price = this.totals.sale_unit_price.toFixed(6)
+            this.totals.purchase_unit_price = this.totals.purchase_unit_price.toFixed(3)
+            this.totals.sale_unit_price = this.totals.sale_unit_price.toFixed(3)
+           
+            this.totals.cost_warehouse = this.totals.cost_warehouse.toFixed(3)
+           
 
         },
         initTables() {
+           
             this.$http.get(`/${this.resource}/tables`)
                 .then(response => {
                     this.warehouses = response.data.warehouses;
@@ -407,6 +432,7 @@ export default {
             await this.$http.get(`/${this.resource}/records?${this.getQueryParameters()}`)
                 .then(response => {
                     this.records = response.data.data;
+                    //console.log(this.records);
                     this.pagination = response.data.meta
                     this.pagination.per_page = parseInt(response.data.meta.per_page)
                     this.calculeTotalProfit()
