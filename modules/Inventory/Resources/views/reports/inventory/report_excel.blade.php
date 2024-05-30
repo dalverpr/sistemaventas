@@ -100,11 +100,11 @@
         <th align="right"><strong>Stock mínimo</strong></th>
         <th align="right"><strong>Stock actual</strong></th>
         <th align="right"><strong>Costo</strong></th>
-        <th align="right"><strong>Costo Total</strong></th>
+        <th align="right"><strong>Costo de Inventario</strong></th>
         <th align="right"><strong>Precio de venta</strong></th>
-
-        <th align="right"><strong>Ganancia</strong></th>
-        <th align="right"><strong>Ganancia Total</strong></th>
+        <th align="right"><strong>Costo de venta</strong></th>
+        <th align="right"><strong>Beneficio Unitario.</strong></th>
+        <th align="right"><strong>Beneficio Total</strong></th>
         <th><strong>Marca</strong></th>
         <th><strong>Modelo</strong></th>
         <th><strong>F. vencimiento</strong></th>
@@ -118,19 +118,22 @@
         $total_sale_unit_price = 0;
         $total = 0;
         $total_profit = 0;
-        $total_all_profit = 0
+        $total_all_profit = 0;
+        $total_sale_cost = 0;
     @endphp
     @foreach($records as $key => $row)
         @php
             $total_line = $row['stock'] * $row['purchase_unit_price'];
             $profit = $row['sale_unit_price'] - $row['purchase_unit_price'];
             $total += $total_line;
+            $saleCost = $row['sale_unit_price'] * $row['stock'];
             $total_profit += $profit;
             $total_all_profit+= ($profit * $row['stock']);
             $profit = number_format($profit,2,'.','');
 
             $total_purchase_unit_price += $row['purchase_unit_price'];
             $total_sale_unit_price += $row['sale_unit_price'];
+            $total_sale_cost +=$saleCost;
         @endphp
         <tr>
             <td>{{ $loop->iteration}}</td>
@@ -144,8 +147,9 @@
             <td align="right">{{ $row['purchase_unit_price'] }}</td>
             <td align="right">{{ $total_line }}</td>
             <td align="right">{{ $row['sale_unit_price'] }}</td>
+            <td align="right">{{ $saleCost }}</td>
             <td align="right">{{ $profit }}</td>
-            <td align="right">{{ number_format(abs($profit * $row['stock']),2,'.','')}}</td>
+            <td align="right">{{ number_format(abs($saleCost - $total_line),2,'.','')}}</td>
             <td>{{ $row['brand_name'] }}</td>
             <td>{{ $row['model'] }}</td>
             <td>{{ $row['date_of_due'] }}</td>
@@ -160,23 +164,26 @@
         <th></th>
         <th></th>
         <th></th>
+        <th></th>
+        <th></th>
+      
         <th align="right"></th>
         <th align="right"></th>
-        <th align="right"><strong>Costo</strong></th>
         <th align="right"><strong>Costo Total de Inventario</strong></th>
-        <th align="right"><strong>Precio de venta</strong></th>
-        <th align="right"><strong>Ganancia</strong></th>
-        <th align="right"><strong>Ganancia Total</strong></th>
+        <th align="right"></th>
+        
+        <th align="right"><strong>Costo Total de venta</strong></th>
+         <th align="right"></th>
+        <th align="right"><strong>Total Beneficio</strong></th>
         <th colspan="4"></th>
     </tr>
     <tr>
-        <td colspan="7"
-            class="celda"></td>
-        <td class="celda">{{ number_format($total_purchase_unit_price, 2, '.','') }}</td>
-        <td class="celda">{{ $total }}</td>
-        <td class="celda">{{ number_format($total_sale_unit_price, 2, '.','') }}</td>
-        <td class="celda">S/ {{number_format($total_profit,2,'.','')}}</td>
-        <td class="celda">S/ {{number_format($total_all_profit,2,'.','')}}</td>
+        <td colspan="9" class="celda"></td>
+        <td class="celda" align="right">RD$ {{ number_format($total, 2, '.','') }}</td>
+        <td class="celda"></td>
+        <td class="celda" align="right">RD$ {{ number_format($total_sale_cost, 2, '.','') }}</td>
+        <td class="celda"></td>
+        <td class="celda" align="right">RD$ {{number_format($total_all_profit,2,'.','')}}</td>
         <td colspan="4"
             class="celda"></td>
     </tr>

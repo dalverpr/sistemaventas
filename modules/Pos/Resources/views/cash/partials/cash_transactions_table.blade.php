@@ -2,6 +2,7 @@
 @php
 
     $all_documents = collect($data['all_documents'])->sortBy('order_number_key');
+    
 
     $income_records = $all_documents->where('type_transaction_prefix', 'income');
     

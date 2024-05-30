@@ -57,7 +57,8 @@ class CashController extends Controller
      * @return array
      *
      */
-    public function email(Request $request) {
+    public function email(Request $request)
+    {
         $request->validate(
             ['email' => 'required']
         );
@@ -95,7 +96,8 @@ class CashController extends Controller
      *
      * @return string
      */
-    public static function getStringPaymentMethod($payment_id) {
+    public static function getStringPaymentMethod($payment_id)
+    {
         $payment_method = PaymentMethodType::find($payment_id);
         return (!empty($payment_method)) ? $payment_method->description : '';
     }
@@ -110,7 +112,8 @@ class CashController extends Controller
      *
      * @return string
      */
-    public static function FormatNumber($number = 0, $decimal = 2, $decimal_separador = '.', $miles_separador = '') {
+    public static function FormatNumber($number = 0, $decimal = 2, $decimal_separador = '.', $miles_separador = '')
+    {
         return number_format($number, $decimal, $decimal_separador, $miles_separador);
     }
 
@@ -119,7 +122,8 @@ class CashController extends Controller
      *
      * @return array
      */
-    public function setDataToReport($cash_id = 0) {
+    public function setDataToReport($cash_id = 0)
+    {
 
         set_time_limit(0);
         $data = [];
@@ -134,7 +138,7 @@ class CashController extends Controller
         $cash_final_balance = 0;
         $cash_documents = $cash->cash_documents;
         $all_documents = [];
-
+        dd($cash_documents);
         // Metodos de pago de no credito
         $methods_payment_credit = PaymentMethodType::NonCredit()->get()->transform(function ($row) {
             return $row->id;
@@ -147,6 +151,9 @@ class CashController extends Controller
                 'sum'  => 0,
             ];
         });
+
+        dd($methods_payment);
+
         $company = Company::first();
 
         $data['cash'] = $cash;
@@ -220,15 +227,13 @@ class CashController extends Controller
                     $final_balance += $total;
                     if (count($sale_note->payments) > 0) {
                         $pays = $sale_note->payments;
-                        foreach ($methods_payment as $record)
-                        {
+                        foreach ($methods_payment as $record) {
                             $record_total = $pays->where('payment_method_type_id', $record->id)->sum('payment');
                             $record->sum = ($record->sum + $record_total);
-                            if($record->id === '01') $data['total_payment_cash_01_sale_note'] += $record_total;
+                            if ($record->id === '01') $data['total_payment_cash_01_sale_note'] += $record_total;
                         }
 
                         $data['total_cash_income_pmt_01'] += $this->getIncomeEgressCashDestination($sale_note->payments);
-
                     }
 
                     $data['total_tips'] += $sale_note->tip ? $sale_note->tip->total : 0;
@@ -236,9 +241,9 @@ class CashController extends Controller
 
                 $order_number = 3;
                 $date_payment = Carbon::now()->format('Y-m-d');
-                if(count($pays) > 0){
+                if (count($pays) > 0) {
                     foreach ($pays as $value) {
-                        $date_payment=$value->date_of_payment->format('Y-m-d');
+                        $date_payment = $value->date_of_payment->format('Y-m-d');
                     }
                 }
                 $temp = [
@@ -252,16 +257,16 @@ class CashController extends Controller
                     'total'                     => ((!in_array($sale_note->state_type_id, $status_type_id)) ? 0
                         : $sale_note->total),
                     'currency_type_id'          => $sale_note->currency_type_id,
-                    'usado'                     => $usado." ".__LINE__,
+                    'usado'                     => $usado . " " . __LINE__,
                     'tipo'                      => 'sale_note',
                     'total_payments'            => (!in_array($sale_note->state_type_id, $status_type_id)) ? 0 : $sale_note->payments->sum('payment'),
                     'type_transaction_prefix'   => 'income',
-                    'order_number_key'          => $order_number.'_'.$sale_note->created_at->format('YmdHis'),
+                    'order_number_key'          => $order_number . '_' . $sale_note->created_at->format('YmdHis'),
                 ];
 
                 // items
                 // dd($document->items);
-                foreach($sale_note->items as $item) {
+                foreach ($sale_note->items as $item) {
                     $items++;
                     array_push($all_items, $item);
                     $collection_items->push($item);
@@ -271,8 +276,7 @@ class CashController extends Controller
 
             }
             /** Documentos de Tipo Document */
-            elseif ($cash_document->document)
-            {
+            elseif ($cash_document->document) {
                 $record_total = 0;
                 $document = $cash_document->document;
                 $payment_condition_id = $document->payment_condition_id;
@@ -297,15 +301,14 @@ class CashController extends Controller
                                     ->sum('payment');
                                 $record->sum = ($record->sum + $record_total);
                                 if (!empty($record_total)) {
-                                    $usado .= self::getStringPaymentMethod($record->id).'<br>Se usan los pagos Tipo '.$record->id.'<br>';
+                                    $usado .= self::getStringPaymentMethod($record->id) . '<br>Se usan los pagos Tipo ' . $record->id . '<br>';
                                 }
 
-                                if($record->id === '01') $data['total_payment_cash_01_document'] += $record_total;
-
+                                if ($record->id === '01') $data['total_payment_cash_01_document'] += $record_total;
                             }
                         }
                     } else {
-                        $usado .= '<br> state_type_id: '.$document->state_type_id.'<br>';
+                        $usado .= '<br> state_type_id: ' . $document->state_type_id . '<br>';
                         foreach ($methods_payment as $record) {
                             $record_total = $pays
                                 ->where('payment_method_type_id', $record->id)
@@ -321,9 +324,9 @@ class CashController extends Controller
                                     ];
                                 })
                                 ->sum('payment');
-                            $usado .= "Id de documento {$document->id} - ".self::getStringPaymentMethod($record->id)." /* $record_total */<br>";
+                            $usado .= "Id de documento {$document->id} - " . self::getStringPaymentMethod($record->id) . " /* $record_total */<br>";
                             if ($record->id == '09') {
-                                $usado .= '<br>Se usan los pagos Credito Tipo '.$record->id.' ****<br>';
+                                $usado .= '<br>Se usan los pagos Credito Tipo ' . $record->id . ' ****<br>';
                                 // $record->sum += $document->total;
                                 $credit += $document->total;
                             } elseif ($record_total != 0) {
@@ -348,15 +351,14 @@ class CashController extends Controller
 
                     $data['total_tips'] += $document->tip ? $document->tip->total : 0;
                     $data['total_cash_income_pmt_01'] += $this->getIncomeEgressCashDestination($document->payments);
-
                 }
                 if ($record_total != $document->total) {
-                    $usado .= '<br> Los montos son diferentes '.$document->total." vs ".$pagado."<br>";
+                    $usado .= '<br> Los montos son diferentes ' . $document->total . " vs " . $pagado . "<br>";
                 }
                 $date_payment = Carbon::now()->format('Y-m-d');
-                if(count($pays) > 0){
+                if (count($pays) > 0) {
                     foreach ($pays as $value) {
-                        $date_payment=$value->date_of_payment->format('Y-m-d');
+                        $date_payment = $value->date_of_payment->format('Y-m-d');
                     }
                 }
                 $order_number = $document->document_type_id === '01' ? 1 : 2;
@@ -371,12 +373,12 @@ class CashController extends Controller
                     'total'                     => (!in_array($document->state_type_id, $status_type_id)) ? 0
                         : $document->total,
                     'currency_type_id'          => $document->currency_type_id,
-                    'usado'                     => $usado." ".__LINE__,
+                    'usado'                     => $usado . " " . __LINE__,
 
                     'tipo' => 'document',
                     'total_payments'            => (!in_array($document->state_type_id, $status_type_id)) ? 0 : $document->payments->sum('payment'),
                     'type_transaction_prefix'   => 'income',
-                    'order_number_key'          => $order_number.'_'.$document->created_at->format('YmdHis'),
+                    'order_number_key'          => $order_number . '_' . $document->created_at->format('YmdHis'),
 
                 ];
                 /* Notas de credito o debito*/
@@ -384,7 +386,7 @@ class CashController extends Controller
 
                 // items
                 // dd($document->items);
-                foreach($document->items as $item) {
+                foreach ($document->items as $item) {
                     $items++;
                     array_push($all_items, $item);
                     $collection_items->push($item);
@@ -393,13 +395,11 @@ class CashController extends Controller
                 // fin items
             }
             /** Documentos de Tipo Servicio tecnico */
-            elseif ($cash_document->technical_service) 
-            {
+            elseif ($cash_document->technical_service) {
                 $usado = '<br>Se usan para cash<br>';
                 $technical_service = $cash_document->technical_service;
 
-                if($technical_service->applyToCash())
-                {
+                if ($technical_service->applyToCash()) {
                     $cash_income += $technical_service->total_record;
                     $final_balance += $technical_service->total_record;
 
@@ -409,12 +409,11 @@ class CashController extends Controller
                         foreach ($methods_payment as $record) {
                             $record->sum = ($record->sum + $pays->where('payment_method_type_id', $record->id)->sum('payment'));
                             if (!empty($record_total)) {
-                                $usado .= self::getStringPaymentMethod($record->id).'<br>Se usan los pagos Tipo '.$record->id.'<br>';
+                                $usado .= self::getStringPaymentMethod($record->id) . '<br>Se usan los pagos Tipo ' . $record->id . '<br>';
                             }
                         }
 
                         $data['total_cash_income_pmt_01'] += $this->getIncomeEgressCashDestination($technical_service->payments);
-
                     }
 
                     $order_number = 4;
@@ -422,7 +421,7 @@ class CashController extends Controller
                     $temp = [
                         'type_transaction'          => 'Venta',
                         'document_type_description' => 'Servicio técnico',
-                        'number'                    => 'TS-'.$technical_service->id,//$value->document->number_full,
+                        'number'                    => 'TS-' . $technical_service->id, //$value->document->number_full,
                         'date_of_issue'             => $technical_service->date_of_issue->format('Y-m-d'),
                         'date_sort'                 => $technical_service->date_of_issue,
                         'customer_name'             => $technical_service->customer->name,
@@ -430,23 +429,20 @@ class CashController extends Controller
                         'total'                     => $technical_service->total_record,
                         // 'total'                     => $technical_service->cost,
                         'currency_type_id'          => 'PEN',
-                        'usado'                     => $usado." ".__LINE__,
+                        'usado'                     => $usado . " " . __LINE__,
                         'tipo'                      => 'technical_service',
                         'total_payments'            => $technical_service->payments->sum('payment'),
                         'type_transaction_prefix'   => 'income',
-                        'order_number_key'          => $order_number.'_'.$technical_service->created_at->format('YmdHis'),
+                        'order_number_key'          => $order_number . '_' . $technical_service->created_at->format('YmdHis'),
                     ];
                 }
-
             }
             /** Documentos de Tipo Gastos */
-            elseif ($cash_document->expense_payment)
-            {
+            elseif ($cash_document->expense_payment) {
                 $expense_payment = $cash_document->expense_payment;
                 $total_expense_payment = 0;
 
-                if ($expense_payment->expense->state_type_id == '05')
-                {
+                if ($expense_payment->expense->state_type_id == '05') {
                     $total_expense_payment = self::CalculeTotalOfCurency(
                         $expense_payment->payment,
                         $expense_payment->expense->currency_type_id,
@@ -474,13 +470,13 @@ class CashController extends Controller
                     'total'                     => -$total_expense_payment,
                     // 'total'                     => -$expense_payment->payment,
                     'currency_type_id'          => $expense_payment->expense->currency_type_id,
-                    'usado'                     => $usado." ".__LINE__,
+                    'usado'                     => $usado . " " . __LINE__,
 
                     'tipo' => 'expense_payment',
                     'total_payments'            => $total_expense_payment,
                     // 'total_payments'            => -$expense_payment->payment,
                     'type_transaction_prefix'   => 'egress',
-                    'order_number_key'          => $order_number.'_'.$expense_payment->expense->created_at->format('YmdHis'),
+                    'order_number_key'          => $order_number . '_' . $expense_payment->expense->created_at->format('YmdHis'),
 
                 ];
             }
@@ -513,7 +509,6 @@ class CashController extends Controller
                         $data['total_cash_egress_pmt_01'] += $this->getIncomeEgressCashDestination($payments);
                         // $total_purchase_payment_method_cash += $this->getPaymentsByCashFilter($payments)->sum('payment');
                     }
-
                 }
 
                 $order_number = $purchase->document_type_id == '01' ? 7 : 8;
@@ -528,24 +523,20 @@ class CashController extends Controller
                     'customer_number'           => $purchase->supplier->number,
                     'total'                     => ((!in_array($purchase->state_type_id, $status_type_id)) ? 0 : $purchase->total),
                     'currency_type_id'          => $purchase->currency_type_id,
-                    'usado'                     => $usado." ".__LINE__,
+                    'usado'                     => $usado . " " . __LINE__,
                     'tipo'                      => 'purchase',
                     'total_payments'            => (!in_array($purchase->state_type_id, $status_type_id)) ? 0 : $purchase->payments->sum('payment'),
                     'type_transaction_prefix'   => 'egress',
-                    'order_number_key'          => $order_number.'_'.$purchase->created_at->format('YmdHis'),
+                    'order_number_key'          => $order_number . '_' . $purchase->created_at->format('YmdHis'),
                 ];
-
             }
             /** Cotizaciones */
-            else if ($cash_document->quotation)
-            {
+            else if ($cash_document->quotation) {
                 $quotation = $cash_document->quotation;
 
                 // validar si cumple condiciones para usar registro en reporte
-                if($quotation->applyQuotationToCash())
-                {
-                    if (in_array($quotation->state_type_id, $status_type_id))
-                    {
+                if ($quotation->applyQuotationToCash()) {
+                    if (in_array($quotation->state_type_id, $status_type_id)) {
                         $record_total = 0;
 
                         $total = self::CalculeTotalOfCurency(
@@ -557,8 +548,7 @@ class CashController extends Controller
                         $cash_income += $total;
                         $final_balance += $total;
 
-                        if (count($quotation->payments) > 0)
-                        {
+                        if (count($quotation->payments) > 0) {
                             $pays = $quotation->payments;
                             foreach ($methods_payment as $record) {
                                 $record_total = $pays->where('payment_method_type_id', $record->id)->sum('payment');
@@ -581,16 +571,14 @@ class CashController extends Controller
                         'customer_number'           => $quotation->customer->number,
                         'total'                     => ((!in_array($quotation->state_type_id, $status_type_id)) ? 0 : $quotation->total),
                         'currency_type_id'          => $quotation->currency_type_id,
-                        'usado'                     => $usado." ".__LINE__,
+                        'usado'                     => $usado . " " . __LINE__,
                         'tipo'                      => 'quotation',
                         'total_payments'            => (!in_array($quotation->state_type_id, $status_type_id)) ? 0 : $quotation->payments->sum('payment'),
                         'type_transaction_prefix'   => 'income',
-                        'order_number_key'          => $order_number.'_'.$quotation->created_at->format('YmdHis'),
+                        'order_number_key'          => $order_number . '_' . $quotation->created_at->format('YmdHis'),
                     ];
-
                 }
                 /** Cotizaciones */
-
             }
 
 
@@ -637,90 +625,87 @@ class CashController extends Controller
                             'total'                     => (!in_array($document->state_type_id, $status_type_id)) ? 0
                                 : $document->total,
                             'currency_type_id'          => $document->currency_type_id,
-                            'usado'                     => $usado.' '.__LINE__,
+                            'usado'                     => $usado . ' ' . __LINE__,
                             'tipo'                      => 'document',
                             'type_transaction_prefix'   => $note->isDebit() ? 'income' : 'egress',
-                            'order_number_key'          => $order_number.'_'.$document->created_at->format('YmdHis'),
+                            'order_number_key'          => $order_number . '_' . $document->created_at->format('YmdHis'),
                         ];
 
                         $temp['usado'] = isset($temp['usado']) ? $temp['usado'] : '--';
                         $temp['total_string'] = self::FormatNumber($temp['total']);
                         $all_documents[] = $temp;
                     }
-
                 }
             }
-
         }
 
 
-//Inicio: Deyvis: pendiente revisar para que funke
+        //Inicio: Deyvis: pendiente revisar para que funke
         // finanzas ingresos
-        $id_income=$cash->user_id;
-        $incomes=Income::where('user_id', $id_income)->whereTypeUser();
+        $id_income = $cash->user_id;
+        $incomes = Income::where('user_id', $id_income)->whereTypeUser();
         $date_closed = Carbon::now()->format('Y-m-d');
         $time_closed = Carbon::now()->format('H:m:s');
-        if($cash->date_closed){
-            $incomes=$incomes->whereBetween('date_of_issue',[$cash->date_opening,$cash->date_closed]);
-            $incomes=$incomes->whereBetween('time_of_issue',[$cash->time_opening,$cash->time_closed]);
-        }else{
-            $incomes=$incomes->whereBetween('date_of_issue',[$cash->date_opening,$date_closed]);
-            $incomes=$incomes->whereBetween('time_of_issue',[$cash->time_opening,$time_closed]);
+        if ($cash->date_closed) {
+            $incomes = $incomes->whereBetween('date_of_issue', [$cash->date_opening, $cash->date_closed]);
+            $incomes = $incomes->whereBetween('time_of_issue', [$cash->time_opening, $cash->time_closed]);
+        } else {
+            $incomes = $incomes->whereBetween('date_of_issue', [$cash->date_opening, $date_closed]);
+            $incomes = $incomes->whereBetween('time_of_issue', [$cash->time_opening, $time_closed]);
         }
 
-        $incomes=$incomes->get();
-        
+        $incomes = $incomes->get();
+
         if (isset($incomes[0])) {
 
             $data['cash_documents_total'] = (int)$incomes->count();
             /* dd(isset($incomes[0])); */
             foreach ($incomes as $income) {
-                
-                $usado = '';                
-                if( $income->payments[0]['payment_method_type']['id'] == "01"){
-                    if (in_array($income->state_type_id, $status_type_id)){
-                        $payments=$income->payments;
-                            $record_total = 0;
-        
-                            $total = self::CalculeTotalOfCurency(
-                                $income->total,
-                                $income->currency_type_id,
-                                $income->exchange_rate_sale
-                            );
-        
-                            $cash_income += $total;
-                            $final_balance += $total;
 
-                            if (count($income->payments) > 0) 
-                            {
-                                $pays = $income->payments;
-                                foreach ($methods_payment as $record) {
-                                    $record_total = $pays->where('payment_method_type_id', $record->id)->sum('payment');
-                                    $record->sum = ($record->sum + $record_total);
-                                }
+                $usado = '';
+                if ($income->payments[0]['payment_method_type']['id'] == "01") {
+                    if (in_array($income->state_type_id, $status_type_id)) {
+                        $payments = $income->payments;
+                        $record_total = 0;
+
+                        $total = self::CalculeTotalOfCurency(
+                            $income->total,
+                            $income->currency_type_id,
+                            $income->exchange_rate_sale
+                        );
+
+                        $cash_income += $total;
+                        $final_balance += $total;
+
+                        if (count($income->payments) > 0) {
+                            $pays = $income->payments;
+                            foreach ($methods_payment as $record) {
+                                $record_total = $pays->where('payment_method_type_id', $record->id)->sum('payment');
+                                $record->sum = ($record->sum + $record_total);
                             }
+                        }
 
-                            $temp = [
-                                'type_transaction'          => 'Ingresos (finanzas)',
-                                'document_type_description' => $income->income_type->description,
-                                'number'                    => $income->number,
-                                'date_of_issue'             => $income->date_of_issue->format('Y-m-d'),
-                                'date_sort'                 => $income->date_of_issue,
-                                'customer_name'             => $income->customer,
-                                'customer_number'           => '-',
-                                'total'                     => ((!in_array($income->state_type_id, $status_type_id)) ? 0 : $income->total),
-                                'currency_type_id'          => $income->currency_type_id,
-                                'usado'                     => $usado." ".__LINE__,
-                                'tipo'                      => 'finance',
-                                'total_payments'            => (!in_array($income->state_type_id, $status_type_id)) ? 0 : $income->payments->sum('payment'),
-                            ];
+                        $temp = [
+                            'type_transaction'          => 'Ingresos (finanzas)',
+                            'document_type_description' => $income->income_type->description,
+                            'number'                    => $income->number,
+                            'date_of_issue'             => $income->date_of_issue->format('Y-m-d'),
+                            'date_sort'                 => $income->date_of_issue,
+                            'customer_name'             => $income->customer,
+                            'customer_number'           => '-',
+                            'total'                     => ((!in_array($income->state_type_id, $status_type_id)) ? 0 : $income->total),
+                            'currency_type_id'          => $income->currency_type_id,
+                            'usado'                     => $usado . " " . __LINE__,
+                            'tipo'                      => 'finance',
+                            'total_payments'            => (!in_array($income->state_type_id, $status_type_id)) ? 0 : $income->payments->sum('payment'),
+                        ];
                     }
                 } else {
                     // $temp = [];
                 }
-            
-                /* dd((!in_array($income->state_type_id, $status_type_id)) ? 0 : $income->payments->sum('payment')); */                
-                
+
+                /* dd((!in_array($income->state_type_id, $status_type_id)) ? 0 : $income->payments->sum('payment')); */
+
                 if (!empty($temp)) {
                     $temp['usado'] = isset($temp['usado']) ? $temp['usado'] : '--';
                     $temp['total_string'] = self::FormatNumber($temp['total']);
@@ -729,17 +714,16 @@ class CashController extends Controller
                 }
             }
         }
-//Fin: Deyvis: pendiente revisar para que funke
+        //Fin: Deyvis: pendiente revisar para que funke
 
 
-//        $all_documents = collect($all_documents)->sortBy('date_sort')->all();
+        //        $all_documents = collect($all_documents)->sortBy('date_sort')->all();
         /************************/
         /************************/
         $data['all_documents'] = $all_documents;
         $temp = [];
 
-        foreach ($methods_payment as $index => $item)
-        {
+        foreach ($methods_payment as $index => $item) {
             $temp[] = [
                 'iteracion' => $index + 1,
                 'name'      => $item->name,
@@ -780,22 +764,23 @@ class CashController extends Controller
      * @param  $items
      * @return array
      */
-    public function getFormatItemToReport($items) {
+    public function getFormatItemToReport($items)
+    {
         $items_all = [];
         $categories_all = [];
         $grouped = $items->groupBy('item_id');
         $group_cat = [];
-        foreach($grouped as $group){
+        foreach ($grouped as $group) {
             $id = $group[0]->item_id;
             $name = $group[0]->item->description;
             $unit_price = $group[0]->unit_price;
             $quantity = 0;
             $total = 0;
-            foreach($group as $item){
+            foreach ($group as $item) {
                 $quantity = $quantity + $item->quantity;
                 $total = $total + $item->total;
                 $cat = [
-                    'name' => $item->relation_item->category_id != null ?$item->relation_item->category->name:'N/A',
+                    'name' => $item->relation_item->category_id != null ? $item->relation_item->category->name : 'N/A',
                     'quantity' => $item->quantity,
                     'total' => $item->total
                 ];
@@ -816,10 +801,10 @@ class CashController extends Controller
 
         $collect_cat = collect($group_cat)->groupBy('name');
         // dd($collect_cat);
-        foreach($collect_cat as $groups) {
+        foreach ($collect_cat as $groups) {
             $cat_quantity = 0;
             $cat_total = 0;
-            foreach($groups as $cat) {
+            foreach ($groups as $cat) {
                 $cat_quantity = $cat_quantity + $cat['quantity'];
                 $cat_total = $cat_total + $cat['total'];
             }
@@ -849,17 +834,16 @@ class CashController extends Controller
     public function getIncomeEgressCashDestination($payments)
     {
         return $this->getPaymentsByCashFilter($payments)
-                    ->sum(function($row){
+            ->sum(function ($row) {
 
-                        $payment = 0;
+                $payment = 0;
 
-                        if($row->global_payment ?? false)
-                        {
-                            if($row->global_payment->isCashDestination()) $payment = $row->payment;
-                        }
+                if ($row->global_payment ?? false) {
+                    if ($row->global_payment->isCashDestination()) $payment = $row->payment;
+                }
 
-                        return $payment;
-                    });
+                return $payment;
+            });
     }
 
 
@@ -928,7 +912,8 @@ class CashController extends Controller
      *
      * @return string[]
      */
-    public static function getStateTypeId(){
+    public static function getStateTypeId()
+    {
         return [
             '01', //Registrado
             '03', // Enviado
@@ -956,16 +941,16 @@ class CashController extends Controller
         $data = $this->setDataToReport($cash);
         // dd($data);
 
-        $quantity_rows = 30;//$cash->cash_documents()->count();
+        $quantity_rows = 30; //$cash->cash_documents()->count();
 
         $width = 78;
-        if($mm != null) {
+        if ($mm != null) {
             $width = $mm - 2;
         }
 
-        $view = view('pos::cash.report_pdf_'.$format, compact('data'));
-        if($format === 'simple_a4') {
-            $view = view('pos::cash.report_pdf_'.$format, compact('data'));
+        $view = view('pos::cash.report_pdf_' . $format, compact('data'));
+        if ($format === 'simple_a4') {
+            $view = view('pos::cash.report_pdf_' . $format, compact('data'));
         }
         $html = $view->render();
 
@@ -978,7 +963,7 @@ class CashController extends Controller
                 'format'        => [
                     $width,
                     190 +
-                    ($quantity_rows * 8),
+                        ($quantity_rows * 8),
                 ],
                 'margin_top'    => 3,
                 'margin_right'  => 3,
@@ -1005,8 +990,9 @@ class CashController extends Controller
      * @throws \Mpdf\MpdfException
      * @throws \Throwable
      */
-    public function reportTicket($cash, $mm) {
-        $temp = tempnam(sys_get_temp_dir(), 'cash_pdf_ticket_'.$mm);
+    public function reportTicket($cash, $mm)
+    {
+        $temp = tempnam(sys_get_temp_dir(), 'cash_pdf_ticket_' . $mm);
 
         file_put_contents($temp, $this->getPdf($cash, 'ticket', $mm));
 
@@ -1030,8 +1016,10 @@ class CashController extends Controller
      * @throws \Mpdf\MpdfException
      * @throws \Throwable
      */
-    public function reportA4($cash) {
+    public function reportA4($cash)
+    {
         $temp = tempnam(sys_get_temp_dir(), 'cash_pdf_a4');
+
         file_put_contents($temp, $this->getPdf($cash, 'a4'));
 
         $headers = [
@@ -1054,7 +1042,8 @@ class CashController extends Controller
      * @throws \Mpdf\MpdfException
      * @throws \Throwable
      */
-    public function reportSimpleA4($cash) {
+    public function reportSimpleA4($cash)
+    {
         $temp = tempnam(sys_get_temp_dir(), 'cash_pdf_a4');
         file_put_contents($temp, $this->getPdf($cash, 'simple_a4'));
 
@@ -1073,7 +1062,8 @@ class CashController extends Controller
      *
      * @return Response|\Symfony\Component\HttpFoundation\BinaryFileResponse
      */
-    public function reportExcel($cash) {
+    public function reportExcel($cash)
+    {
         $data = $this->setDataToReport($cash);
         // dd($data);
 
@@ -1098,7 +1088,7 @@ class CashController extends Controller
             ->company($company)
             ->methods_payment($methods_payment);
         */
-        return $report_cash_export->download($filename.'.xlsx');
+        return $report_cash_export->download($filename . '.xlsx');
     }
 
 
@@ -1152,12 +1142,11 @@ class CashController extends Controller
         $data_payments = collect();
         $data = $this->getHeaderCommonDataToReport($cash);
 
-        foreach ($cash->cash_documents as $cash_document)
-        {
+        foreach ($cash->cash_documents as $cash_document) {
             $model_associated = $cash_document->getDataModelAssociated();
             $payments = $model_associated->getCashPayments();
 
-            $payments->each(function($payment) use($data_payments){
+            $payments->each(function ($payment) use ($data_payments) {
                 $data_payments->push($payment);
             });
         }
@@ -1167,7 +1156,6 @@ class CashController extends Controller
         $data['total_balance'] = $data['total_income'] - $data['total_egress'];
 
         return $this->toPrintCashIncomeEgress(compact('data', 'data_payments'));
-
     }
 
 
@@ -1195,6 +1183,4 @@ class CashController extends Controller
 
         return response()->file($temp, $headers);
     }
-
-
 }

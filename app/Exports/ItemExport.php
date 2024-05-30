@@ -18,8 +18,10 @@ class ItemExport implements FromView, ShouldAutoSize
 {
     use Exportable;
 
-    public function records($records) {
+    public function records($records)
+    {
         $this->records = $records;
+
 
         return $this;
     }
@@ -27,8 +29,8 @@ class ItemExport implements FromView, ShouldAutoSize
     /**
      * @return array
      */
-    public function getExtraData()
-    : array {
+    public function getExtraData(): array
+    {
         return $this->extra_data;
     }
 
@@ -37,18 +39,17 @@ class ItemExport implements FromView, ShouldAutoSize
      *
      * @return ItemExport
      */
-    public function setExtraData(array $extra_data)
-    : ItemExport {
+    public function setExtraData(array $extra_data): ItemExport
+    {
         $this->extra_data = $extra_data;
         return $this;
     }
 
-    public function view(): View {
+    public function view(): View
+    {
         return view('tenant.items.exports.items', [
-            'records'=> $this->records,
-            'extra_data'=> $this->extra_data,
+            'records' => $this->records,
+            'extra_data' => $this->extra_data,
         ]);
     }
-
-
 }

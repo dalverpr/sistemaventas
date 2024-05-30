@@ -27,6 +27,7 @@
                 <thead>
                 <tr>
                     <th>#</th>
+                    <th>Código de barras</th>
                     <th>Código interno</th>
                     <th>Nombre</th>
                     <th>Nombre alternativo</th>
@@ -48,6 +49,7 @@
                         <th>{{$txt}}</th>
 
                         @endforeach
+                    <th>Costo</th>
                     <th>Precio</th>
                     <th>Fecha de vencimiento</th>
                     @for($i=0;$i<$max_prices_columns;$i++)
@@ -68,6 +70,7 @@
                     @endphp
                     <tr>
                         <td class="celda">{{$loop->iteration}}</td>
+                        <td class="celda">{{$value->barcode}}</td>
                         <td class="celda">{{$value->internal_id}}</td>
                         <td class="celda">{{$value->name}}</td>
                         <td class="celda">{{$value->second_name }}</td>
@@ -89,6 +92,7 @@
                             ?>
                             <td class="celda">{{$txt}}</td>
                         @endforeach
+                        <td class="celda">{{$value->purchase_unit_price }}</td>
                         <td class="celda">{{$value->sale_unit_price }}</td>
                         <td class="celda">{{$value->date_of_due }}</td>
                         @for($i=0;$i<$max_prices_columns;$i++)
