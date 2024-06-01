@@ -1025,7 +1025,7 @@ class ItemController extends Controller
             $items->whereBetween('items.created_at', [$d_start, $d_end]);
         }
 
-        $records =  $items->category()->get();
+        $records =  $items->get();
         // dd($records);
         return (new ItemExport())
             ->setExtraData($extradata)
