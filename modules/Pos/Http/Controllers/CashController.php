@@ -138,7 +138,7 @@ class CashController extends Controller
         $cash_final_balance = 0;
         $cash_documents = $cash->cash_documents;
         $all_documents = [];
-        dd($cash_documents);
+        //dd($cash_documents);
         // Metodos de pago de no credito
         $methods_payment_credit = PaymentMethodType::NonCredit()->get()->transform(function ($row) {
             return $row->id;
@@ -152,7 +152,7 @@ class CashController extends Controller
             ];
         });
 
-        dd($methods_payment);
+        //dd($methods_payment);
 
         $company = Company::first();
 
