@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 
 $hostname = app(Hyn\Tenancy\Contracts\CurrentHostname::class);
 
@@ -46,6 +47,14 @@ if ($hostname) {
             Route::get('list-vouchers-type', 'Tenant\SettingController@listVouchersType');
             Route::get('list-transfer-reason-types', 'Tenant\SettingController@listTransferReasonTypes');
 
+            Route::get('/profit/report', 'Tenant\ReportProfitController@index')->name('tenant.reports.profit.index');
+            Route::get('/profit/tables', 'Tenant\ReportProfitController@tables')->name('tenant.reports.profit.tables');
+            Route::get('/profit/records', 'Tenant\ReportProfitController@records')->name('tenant.reports.profit.records');
+            Route::get('/profit/getProfits/{establishment_id}/{warehouse_id}/{month}/{year}', 'Tenant\ReportProfitController@getProfits');
+            Route::get('/profit/pdf', 'Tenant\ReportProfitController@pdf')->name('tenant.reports.profit.pdf');
+            Route::get('/profit/excel', 'Tenant\ReportProfitController@excel')->name('tenant.reports.profit.report_profit_excel');
+
+            
             Route::get('advanced', 'Tenant\AdvancedController@index')->name('tenant.advanced.index')->middleware('redirect.level');
 
             Route::get('tasks', 'Tenant\TaskController@index')->name('tenant.tasks.index')->middleware('redirect.level');

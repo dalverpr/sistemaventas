@@ -226,4 +226,10 @@
             return $return;
 
         }
+
+        public function listProfitReport(){
+            return view('tenant.settings.list_extras');
+        
+
+        }
     }

@@ -186,6 +186,9 @@ if ($hostname) {
                 Route::post('inventory/pdf', 'ReportInventoryController@pdf')->name('reports.inventory.pdf');
                 Route::post('inventory/excel', 'ReportInventoryController@excel')->name('reports.inventory.report_excel');
 
+
+               
+
                 // Route::get('kardex', 'ReportKardexController@index')->name('reports.kardex.index');
                 // Route::get('kardex/search', 'ReportKardexController@search')->name('reports.kardex.search');
                 // Route::post('kardex/pdf', 'ReportKardexController@pdf')->name('reports.kardex.pdf');
