@@ -90,7 +90,7 @@ class TenantCatalogsTable extends Migration
         });
 
         DB::table('cat_currency_types')->insert([
-            ['id' => 'PEN', 'active' => true, 'symbol' => 'S/', 'description' => 'Soles'],
+            ['id' => 'DOP', 'active' => true, 'symbol' => 'RD$', 'description' => 'Pesos dominicanos'],
             ['id' => 'USD', 'active' => true, 'symbol' => '$',  'description' => 'Dólares Americanos'],
         ]);
 

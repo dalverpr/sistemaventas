@@ -599,7 +599,7 @@
                                     @click="selectCurrencyType"
                                 >
                                     <template
-                                        v-if="form.currency_type_id == 'PEN'"
+                                        v-if="form.currency_type_id == 'DOP'"
                                     >
                                         <strong>S/</strong>
                                     </template>
