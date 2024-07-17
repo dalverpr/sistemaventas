@@ -21,9 +21,9 @@ class Profit extends ModelCatalog
         'fbam'
     ];
 
-    static function getProfits($establishment_id,$warehouse_id,$month,$year){
+    static function getProfits($establishment_id,$warehouse_id,$initialDate,$endDate){
          DB::connection('tenant')
-         ->statement('call spGetProfit (?,?,?,?)',[$establishment_id,$warehouse_id,$month,$year]);
+         ->statement('call spGetProfit (?,?,?,?)',[$establishment_id,$warehouse_id,$initialDate,$endDate]);
     } 
    
 }

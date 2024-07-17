@@ -7,28 +7,39 @@
                 <div class="card-body">
                     <!--Periodo-->
                      <div class="row mt-2">
-                            <div class="col-md-3">
-                                <label class="control-label">Periodo</label>
-                                <el-select v-model="form.period"
-                                        @change="changePeriod">
-                                    <el-option key="month"
-                                            label="Por mes"
-                                            value="month"></el-option>
-                                
-                                </el-select>
-                            </div>"
-                            <template v-if="form.period === 'month'">
-                                <div class="col-md-3">
-                                    <label class="control-label">Mes de</label>
-                                    <el-date-picker v-model="form.month_start"
-                                                    :clearable="false"
-                                                    format="MM/yyyy"
-                                                    type="month"
-                                                    value-format="yyyy-MM"
-                                                    @change="changeDisabledMonths"></el-date-picker>
-                                </div>
-                            </template>               
-                    </div>              
+                    <div class="col-md-3">
+                        <label class="control-label">Periodo</label>
+                        <el-select v-model="form.period"
+                                   @change="changePeriod">
+                            <el-option key="between_dates"
+                                       label="Entre fechas"
+                                       value="between_dates"></el-option>
+                        </el-select>
+                    </div>
+                 
+                    <template v-if="form.period === 'date' || form.period === 'between_dates'">
+                        <div class="col-md-3">
+                            <label class="control-label">Fecha del</label>
+                            <el-date-picker v-model="form.date_start"
+                                            :clearable="false"
+                                            format="dd/MM/yyyy"
+                                            type="date"
+                                            value-format="yyyy-MM-dd"
+                                            @change="changeDisabledDates"></el-date-picker>
+                        </div>
+                    </template>
+                    <template v-if="form.period === 'between_dates'">
+                        <div class="col-md-3">
+                            <label class="control-label">Fecha al</label>
+                            <el-date-picker v-model="form.date_end"
+                                            :clearable="false"
+                                            :picker-options="pickerOptionsDates"
+                                            format="dd/MM/yyyy"
+                                            type="date"
+                                            value-format="yyyy-MM-dd"></el-date-picker>
+                        </div>
+                    </template>
+                </div>           
                     <!--Establicimiento-->
                      <div class="row mt-2">
                         <div class="col-md-6">
@@ -331,15 +342,14 @@ export default {
             this.ultimoDiaMesActual = this.getLastDayOfMonth(new Date().getFullYear(), new Date().getMonth())
         },
         changeDisabledMonths() {
-            if (this.form.month_end < this.form.month_start) {
-                this.form.month_end = this.form.month_start
-            }
+            this.form.month_end = this.form.month_start
+            alert(this.form.month_start)
         },
         changeDisabledDates() {
             if (this.form.date_end < this.form.date_start) {
                 this.form.date_end = this.form.date_start
             }
-            this.getRecords();
+            //this.getRecords();
         },
         initTotals() {
 
@@ -356,7 +366,11 @@ export default {
                 'filter': '01',
                 'category_id': null,
                 'brand_id': null,
-                active: null
+                active: null,
+                date_start: moment().format('YYYY-MM-DD'),
+                date_end: moment().format('YYYY-MM-DD'),
+                month_start: moment().format('YYYY-MM'),
+                month_end: moment().format('YYYY-MM'),
             }
         },
         calculeTotalProfit() {
@@ -428,6 +442,17 @@ export default {
                 return false;
             }
 
+            if (_.isNull(this.form.date_start)) {
+                this.$message.error('Seleccionar una fecha de inicio ');
+                return false;
+            }
+
+            if (_.isNull(this.form.date_end)) {
+                this.$message.error('Seleccionar una fecha final ');
+                return false;
+            }
+            
+
             this.loading = true
 
             this.records = [];
@@ -435,10 +460,7 @@ export default {
             this.total_all_profit = 0;
             this.initTotals()
             let range = this.filters.range.visible
-            if (range !== true) {
-                delete this.form.date_start
-                delete this.form.date_end
-            }
+            
 
             await this.$http.get(`/${this.resource}/records?${this.getQueryParameters()}`)
                 .then(response => {
@@ -449,7 +471,7 @@ export default {
                     this.calculeTotalProfit()
                 })
 
-            await this.$http.get(`/${this.resource}/getProfits/${this.form.establishment_id}/${this.form.warehouse_id}/${new Date().getMonth() + 1}/${new Date().getFullYear()}`)
+            await this.$http.get(`/${this.resource}/getProfits/${this.form.establishment_id}/${this.form.warehouse_id}/${this.form.date_start}/${this.form.date_end}`)
                 .then(response => {
                     this.profits = response.data.profits;
                     this.ultimoDiaMesActual = response.data.udm;

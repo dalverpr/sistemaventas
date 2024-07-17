@@ -33,7 +33,7 @@ BEGIN
                             SELECT (SELECT DATE_ADD(DATE_ADD(LAST_DAY(NOW()), INTERVAL -1 DAY),INTERVAL -1 MONTH)) AS fecha, i.currency_type_id as moneda,  m.quantity as cantidad, i.purchase_unit_price as precio_compra, 
                                     (SELECT sale_original from exchange_rates tc where tc.date = (SELECT DATE_ADD(DATE_ADD(LAST_DAY(NOW()), INTERVAL -1 DAY),INTERVAL -1 MONTH))) as tipo_cambio,  'SFMA' as transaccion
                                 FROM item_movement m JOIN items i ON m.item_id = i.id 
-                                WHERE m.date_of_movement = (SELECT DATE_ADD(DATE_ADD(LAST_DAY(NOW()), INTERVAL -1 DAY),INTERVAL -1 MONTH))
+                                 WHERE MONTH(m.date_of_movement) = MONTHPERIOD -1 AND YEAR(m.date_of_movement) = YEARPERIOD
                                 AND i.warehouse_id = WAREHOUSE_ID
                             UNION ALL
                             SELECT c.date_of_issue as fecha, c.currency_type_id as moneda, i.quantity as cantidad, i.unit_price as precio_compra, c.exchange_rate_sale as tipo_cambio, 'COMPRAS' as transaccion

@@ -15,7 +15,7 @@
                             <th class="">Serie</th>
                             <th class="">Número</th>
                             <th class="">Monto</th>
-                        <tr>
+                        </tr>
                         <tr slot-scope="{ index, row }">
                             <td>{{ index }}</td>
                             <td>{{row.date_of_issue}}</td>

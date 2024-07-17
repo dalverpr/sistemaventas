@@ -78,15 +78,12 @@ class ReportProfitController extends Controller
         return $query;
     }
 
-    public function getProfits($establishment_id,$warehouse_id, $month, $year){
+    public function getProfits($establishment_id,$warehouse_id, $initialDate, $endDate){
         
         
-        Profit::getProfits($establishment_id, $warehouse_id, $month,$year);
+        Profit::getProfits($establishment_id, $warehouse_id, $initialDate,$endDate);
 
-        $ultimoDiaMes = $this->data_last_month_day();
-        $month = date('m') - 1;
-       
-        $ultimoDiaMesAnterior = $this->data_last_prev_month_day($month);
+        
 
         return [
             'profits' => Profit::query()->select(
@@ -97,8 +94,8 @@ class ReportProfitController extends Controller
                 'sales',
                 'fbam'
             )->get(),
-            'udma' =>  $ultimoDiaMesAnterior,
-            'udm' => $ultimoDiaMes
+            'udma' =>  $initialDate,
+            'udm' => $endDate
         ];
         
     }
@@ -144,10 +141,10 @@ class ReportProfitController extends Controller
                 $q->whereNotIsSet();
             })->latest()->get();
         }
-        $ultimoDiaMes = $this->data_last_month_day();
-        $month = date('m') - 1;
+        
+        $ultimoDiaMes = $request->date_end;
        
-        $ultimoDiaMesAnterior = $this->data_last_prev_month_day($month);
+        $ultimoDiaMesAnterior = $request->date_start;
         
         
 
@@ -164,10 +161,11 @@ class ReportProfitController extends Controller
         $establishment = Establishment::first();
         $profits = Profit::first();
        
-        $ultimoDiaMes = $this->data_last_month_day();
-        $month = date('m') - 1;
+        $ultimoDiaMes = $request->date_end;
        
-        $ultimoDiaMesAnterior = $this->data_last_prev_month_day($month);
+        $ultimoDiaMesAnterior = $request->date_start;
+
+        
 
         if ($request->warehouse_id && $request->warehouse_id != 'all') {
             $records = ItemWarehouse::with(['item', 'item.brand'])->where('warehouse_id', $request->warehouse_id)->whereHas('item', function ($q) {
