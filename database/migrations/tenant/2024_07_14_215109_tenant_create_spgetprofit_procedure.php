@@ -10,7 +10,7 @@ class TenantCreateSpgetprofitProcedure extends Migration
     public function up()
     {
             $sql = "CREATE PROCEDURE spGetProfit(ESTABLISMENT_ID INTEGER, WAREHOUSE_ID INTEGER, MONTHPERIOD INTEGER, YEARPERIOD INTEGER)
-BEGIN
+                    BEGIN
                         DECLARE EXCHANGE_RATE_PER_DAY FLOAT;
                         DECLARE CURRENCY_TYPE VARCHAR(3);
                         DECLARE QTY FLOAT;
@@ -30,38 +30,42 @@ BEGIN
 
                             /*Cursor Saldo FInal compras ingresos egresos ventas*/
                             DECLARE cursorFinalBalance CURSOR FOR 
-                            SELECT (SELECT DATE_ADD(DATE_ADD(LAST_DAY(NOW()), INTERVAL -1 DAY),INTERVAL -1 MONTH)) AS fecha, i.currency_type_id as moneda,  m.quantity as cantidad, i.purchase_unit_price as precio_compra, 
-                                    (SELECT sale_original from exchange_rates tc where tc.date = (SELECT DATE_ADD(DATE_ADD(LAST_DAY(NOW()), INTERVAL -1 DAY),INTERVAL -1 MONTH))) as tipo_cambio,  'SFMA' as transaccion
-                                FROM item_movement m JOIN items i ON m.item_id = i.id 
-                                 WHERE MONTH(m.date_of_movement) = MONTHPERIOD -1 AND YEAR(m.date_of_movement) = YEARPERIOD
-                                AND i.warehouse_id = WAREHOUSE_ID
+                                   SELECT m.date_of_movement AS fecha, i.currency_type_id as moneda, m.quantity as cantidad , i.purchase_unit_price as precio_compra, 
+                                   (SELECT sale_original from exchange_rates tc where tc.date = (SELECT DATE_ADD(DATE_ADD(LAST_DAY(NOW()), INTERVAL -1 DAY),INTERVAL -1 MONTH))) as tipo_cambio,  'SFMA' as transaccion
+                              FROM item_movement m JOIN items i ON m.item_id = i.id 
+                             WHERE m.date_of_movement BETWEEN CAST((DATE_ADD(DATE_ADD(LAST_DAY(INITIALDATE), INTERVAL 0 DAY),INTERVAL -1 MONTH) - DAY(INITIALDATE)) AS DATE)
+                               AND CAST((DATE_ADD(DATE_ADD(LAST_DAY(ENDDATE), INTERVAL 0 DAY),INTERVAL -1 MONTH) - DAY(ENDDATE)) AS DATE)
+                               AND i.warehouse_id = WAREHOUSE_ID
                             UNION ALL
                             SELECT c.date_of_issue as fecha, c.currency_type_id as moneda, i.quantity as cantidad, i.unit_price as precio_compra, c.exchange_rate_sale as tipo_cambio, 'COMPRAS' as transaccion
                                 FROM purchases c JOIN purchase_items i ON c.id = i.purchase_id
-                                WHERE MONTH(c.date_of_issue) = MONTHPERIOD AND YEAR(c.date_of_issue) = YEARPERIOD
-                                AND c.establishment_id = ESTABLISMENT_ID
+                                WHERE C.date_of_issue BETWEEN INITIALDATE AND ENDDATE
+                                 AND c.establishment_id = ESTABLISMENT_ID
                             UNION ALL 
                             SELECT c.date_of_issue as fecha, c.currency_type_id as moneda, i.total as cantidad, 1 as precio_compra, c.exchange_rate_sale as tipo_cambio, 'INGRESOS' as transaccion
                                 FROM income c JOIN income_items i ON c.id = i.income_id
-                                WHERE MONTH(c.date_of_issue) = MONTHPERIOD AND YEAR(c.date_of_issue) = YEARPERIOD
+                                WHERE C.date_of_issue BETWEEN INITIALDATE AND ENDDATE
                                 AND c.establishment_id = ESTABLISMENT_ID
                             UNION ALL
                             SELECT c.date_of_issue as fecha, c.currency_type_id as moneda, i.total as cantidad, 1 as precio_compra, c.exchange_rate_sale as tipo_cambio, 'EGRESOS' as transaccion
                                 FROM expenses c JOIN expense_items i ON c.id = i.expense_id
-                                WHERE MONTH(c.date_of_issue) = MONTHPERIOD AND YEAR(c.date_of_issue) = YEARPERIOD
+                                WHERE C.date_of_issue BETWEEN INITIALDATE AND ENDDATE
                                 AND c.establishment_id = ESTABLISMENT_ID  
                             UNION ALL 
-                             SELECT (SELECT DATE_ADD(DATE_ADD(LAST_DAY(NOW()), INTERVAL 0 DAY),INTERVAL 0 MONTH)) AS fecha, i.currency_type_id as moneda, m.stock as cantidad, i.sale_unit_price as precio_compra, 
-                                 (SELECT sale_original from exchange_rates tc where month(tc.date) = MONTHPERIOD and year(tc.date) = YEARPERIOD) as tipo_cambio, 'VENTAS' as transaccion
+                             SELECT ENDDATE AS fecha, i.currency_type_id as moneda, m.stock as cantidad, i.sale_unit_price as precio_compra, 
+                                 (SELECT sale_original from exchange_rates tc where tc.date = CAST(M.updated_at AS DATE)) as tipo_cambio, 'VENTAS' as transaccion
                                 FROM item_warehouse m JOIN items i ON m.item_id = i.id 
-                                WHERE MONTH(m.updated_at) = MONTHPERIOD AND YEAR(m.updated_at) = YEARPERIOD
+                                WHERE M.updated_at BETWEEN INITIALDATE AND ENDDATE
                                 AND i.warehouse_id = WAREHOUSE_ID
                             UNION ALL
-                               SELECT (SELECT DATE_ADD(DATE_ADD(LAST_DAY(NOW()), INTERVAL 0 DAY),INTERVAL 0 MONTH)) AS fecha, i.currency_type_id as moneda,  m.stock as cantidad, i.purchase_unit_price as precio_compra, 
-                                 (SELECT sale_original from exchange_rates tc where month(tc.date) = MONTHPERIOD and year(tc.date) = YEARPERIOD) as tipo_cambio, 'SFMC' as transaccion
-                                FROM item_warehouse m JOIN items i ON m.item_id = i.id 
-                                WHERE MONTH(m.updated_at) = MONTHPERIOD AND YEAR(m.updated_at) = YEARPERIOD
-                                AND i.warehouse_id = WAREHOUSE_ID;                       
+                            SELECT DISTINCT ENDDATE AS fecha, i.currency_type_id as moneda,  w.stock as cantidad, i.purchase_unit_price as precio_compra, 
+                                 (SELECT sale_original from exchange_rates tc where tc.date = CAST(M.date_of_movement AS DATE)) as tipo_cambio, 'SFMC' as transaccion
+                                FROM item_movement m JOIN items i ON m.item_id = i.id
+                                     JOIN item_warehouse w ON w.id = m.item_id 
+                                WHERE m.date_of_movement BETWEEN INITIALDATE AND ENDDATE
+                                AND i.warehouse_id = WAREHOUSE_ID;
+                          
+                                               
 
 
 
