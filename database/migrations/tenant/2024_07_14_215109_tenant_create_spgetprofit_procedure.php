@@ -9,7 +9,7 @@ class TenantCreateSpgetprofitProcedure extends Migration
 {
     public function up()
     {
-            $sql = "CREATE PROCEDURE spGetProfit(ESTABLISMENT_ID INTEGER, WAREHOUSE_ID INTEGER, MONTHPERIOD INTEGER, YEARPERIOD INTEGER)
+            $sql = "CREATE PROCEDURE spGetProfit(ESTABLISMENT_ID INTEGER, WAREHOUSE_ID INTEGER, INITIALDATE DATE, ENDDATE DATE)
                     BEGIN
                         DECLARE EXCHANGE_RATE_PER_DAY FLOAT;
                         DECLARE CURRENCY_TYPE VARCHAR(3);
@@ -85,7 +85,7 @@ class TenantCreateSpgetprofitProcedure extends Migration
                             /*VERIFICAR SI EXISTE REGISTRO EN TABLA PROFITS*/
                             SELECT COUNT(*) INTO RESULT FROM PROFITS;
                             /*VERIFICAR TRANSACCION*/
-                            IF CURRENCY_TYPE = 'PEN' THEN
+                            IF CURRENCY_TYPE = 'DOP' THEN
                                 IF RESULT = 0 OR IFNULL(RESULT,0) = 0 THEN
                                         IF TRANS = 'SFMA' THEN
                                         SET MONTOSFMA = MONTOSFMA + (QTY * PRICE);
